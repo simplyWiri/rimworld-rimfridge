@@ -205,14 +205,14 @@ namespace RimFridge
         {
             base.PostSpawnSetup(respawningAfterLoad);
 
-            FridgeCache.AddFridge(this, this.parent?.Map);
+            FridgeCache.AddFridge(this, this.parent.mapIndexOrState);
         }
 
         public override void PostDeSpawn(Map map)
         {
             base.PostDeSpawn(map);
 
-            FridgeCache.RemoveFridge(this, map);
+            FridgeCache.RemoveFridge(this, map.Index);
         }
 
         public override void PostExposeData()

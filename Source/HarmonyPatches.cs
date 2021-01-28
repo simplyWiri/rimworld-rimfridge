@@ -86,9 +86,7 @@ namespace RimFridge
     {
         static bool Prefix(Thing __instance, ref float __result)
         {
-            Pawn p = __instance as Pawn;
-            if ((p == null || p.Dead) && __instance.Map != null &&
-                FridgeCache.TryGetFridge(__instance.Position, __instance.Map, out CompRefrigerator fridge) &&
+            if ((!(__instance is Pawn p) || p.Dead) && __instance.Map != null && FridgeCache.TryGetFridge(__instance.positionInt, __instance.mapIndexOrState, out CompRefrigerator fridge) &&
                 fridge != null)
             {
                 __result = fridge.currentTemp;
@@ -190,7 +188,7 @@ namespace RimFridge
     {
         static bool Prefix(Building_NutrientPasteDispenser __instance, ref Thing __result)
         {
-            var fc = FridgeCache.GetFridgeCache(__instance.Map);
+            var fc = FridgeCache.GetFridgeCache(__instance.mapIndexOrState);
             foreach (IntVec3 cell in __instance.AdjCellsCardinalInBounds)
             {
                 Thing thing = null;
@@ -221,7 +219,7 @@ namespace RimFridge
     {
         static bool Prefix(Building_NutrientPasteDispenser __instance, ref bool __result)
         {
-            var fc = FridgeCache.GetFridgeCache(__instance.Map);
+            var fc = FridgeCache.GetFridgeCache(__instance.mapIndexOrState);
 
             float num = 0f;
             foreach (IntVec3 cell in __instance.AdjCellsCardinalInBounds)

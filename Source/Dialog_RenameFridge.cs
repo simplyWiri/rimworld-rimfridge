@@ -28,14 +28,13 @@ namespace RimFridge
 
         private readonly CompRefrigerator fridge;
 
-        protected override void SetName(string name)
+        public override void SetName(string name)
         {
             fridge.buildingLabel = name;
-            //Messages.Message("RimFridge_GainsName".Translate(this.fridge.parent.def.label, fridge.parent.Label),
-            //                 MessageTypeDefOf.TaskCompletion, false);
+
         }
 
-        protected override AcceptanceReport NameIsValid(string name)
+        public override AcceptanceReport NameIsValid(string name)
         {
             if (name.Length == 0) return true;
             AcceptanceReport result = base.NameIsValid(name);

@@ -1,4 +1,5 @@
-﻿using Verse;
+﻿using System;
+using Verse;
 using System.Collections.Generic;
 
 namespace RimFridge
@@ -8,29 +9,32 @@ namespace RimFridge
         private const string COULD_NOT_FIND_MAP_COMP = "unable to find fridge grid in map";
 
         private Dictionary<IntVec3, CompRefrigerator> FridgeGrid = new Dictionary<IntVec3, CompRefrigerator>();
+        public static FridgeCache[] fridgeCache = new FridgeCache[8];
 
         public FridgeCache(Map map) : base(map) { }
+
+        public override void FinalizeInit()
+        {
+            if (this.map.Index > fridgeCache.Length)
+            {
+                Array.Resize(ref fridgeCache, this.map.Index + 5);
+            }
+            fridgeCache[this.map.Index] = this;
+        }
 
         public bool HasFridgeAt(IntVec3 cell)
         {
             return this.FridgeGrid.ContainsKey(cell);
         }
 
-        public static FridgeCache GetFridgeCache(Map map)
+        public static FridgeCache GetFridgeCache(int mapIndex)
         {
-            if (map != null)
-            {
-                foreach (var c in map.components)
-                    if (c is FridgeCache fc)
-                        return fc;
-                Log.Error(COULD_NOT_FIND_MAP_COMP);//, COULD_NOT_FIND_MAP_COMP.GetHashCode());
-            }
-            return null;
+            return fridgeCache[mapIndex];
         }
 
-        public static void AddFridge(CompRefrigerator comp, Map map)
+        public static void AddFridge(CompRefrigerator comp, int mapIndex)
         {
-            var c = GetFridgeCache(map);
+            var c = GetFridgeCache(mapIndex);
             if (c != null)
             {
                 foreach (IntVec3 cell in GenAdj.OccupiedRect(comp.parent))
@@ -40,9 +44,9 @@ namespace RimFridge
             }
         }
 
-        public static bool TryGetFridge(IntVec3 cell, Map map, out CompRefrigerator comp)
+        public static bool TryGetFridge(IntVec3 cell, int mapIndex, out CompRefrigerator comp)
         {
-            var c = GetFridgeCache(map);
+            var c = GetFridgeCache(mapIndex);
             if (c != null)
             {
                 return c.FridgeGrid.TryGetValue(cell, out comp);
@@ -51,9 +55,9 @@ namespace RimFridge
             return false;
         }
 
-        public static void RemoveFridge(CompRefrigerator comp, Map map)
+        public static void RemoveFridge(CompRefrigerator comp, int mapIndex)
         {
-            var c = GetFridgeCache(map);
+            var c = GetFridgeCache(mapIndex);
             if (c != null)
             {
                 foreach (IntVec3 cell in GenAdj.OccupiedRect(comp.parent))
@@ -66,6 +70,12 @@ namespace RimFridge
         public override void ExposeData()
         {
             base.ExposeData();
+
+            if (this.map.Index > fridgeCache.Length)
+            {
+                Array.Resize(ref fridgeCache, this.map.Index + 5);
+            }
+            fridgeCache[this.map.Index] = this;
         }
     }
 }
