@@ -28,19 +28,15 @@ namespace RimFridge
     {
         static bool Prefix(ref bool __result, Pawn pawn, LocalTargetInfo dest, PathEndMode peMode, Danger maxDanger, bool canBash, TraverseMode mode)
         {
-            if (dest != null && dest.Thing != null && dest.Thing.def.category == ThingCategory.Item)
-            {
-                foreach (Thing thing in Current.Game.CurrentMap.thingGrid.ThingsAt(dest.Thing.Position))
-                {
-                    if (thing is RimFridge_Building)
-                    {
-                        peMode = PathEndMode.Touch;
-                        __result = pawn.Spawned && pawn.Map.reachability.CanReach(pawn.Position, dest, peMode, TraverseParms.For(pawn, maxDanger, mode, canBash));
-                        return false;
-                    }
-                }
-            }
-            return true;
+            if (dest == null || dest.Thing == null || dest.Thing.def.category != ThingCategory.Item) return true;
+            if (!pawn.Map.thingGrid.ThingsAt(dest.Thing.Position)
+                .OfType<RimFridge_Building>()
+                .Any()) return true;
+
+
+            peMode = PathEndMode.Touch;
+            __result = pawn.Spawned && pawn.Map.reachability.CanReach(pawn.Position, dest, peMode, TraverseParms.For(pawn, maxDanger, mode, canBash));
+            return false;
         }
     }
 
@@ -79,7 +75,7 @@ namespace RimFridge
         }
     }*/
 
-    [HarmonyBefore(new string[]{"io.github.dametri.thermodynamicscore"})]
+    [HarmonyBefore(new string[] {"io.github.dametri.thermodynamicscore"})]
     [HarmonyPriority(Priority.First)]
     [HarmonyPatch(typeof(Thing), "AmbientTemperature", MethodType.Getter)]
     static class Patch_Thing_AmbientTemperature
@@ -92,6 +88,7 @@ namespace RimFridge
                 __result = fridge.currentTemp;
                 return false;
             }
+
             return true;
         }
     }
@@ -109,32 +106,30 @@ namespace RimFridge
             Log.Message(playerNegotiator.Name.ToStringFull);
             if (playerNegotiator != null && playerNegotiator.Map != null)
             {
-                foreach (Thing thing in playerNegotiator.Map.listerBuildings.allBuildingsColonist)
+                foreach (var thing in FridgeCache.GetBuildingsForMap(playerNegotiator.Map.Index))
                 {
-                    if (thing is RimFridge_Building storage)//IsRimFridge(thing?.def))
+                    foreach (IntVec3 cell in thing.AllSlotCells())
                     {
-                        //var storage = thing as Building_Storage;
-                        foreach (IntVec3 cell in storage.AllSlotCells())
+                        foreach (Thing refrigeratedItem in playerNegotiator.Map.thingGrid.ThingsAt(cell))
                         {
-                            foreach (Thing refrigeratedItem in playerNegotiator.Map.thingGrid.ThingsAt(cell))
+                            if (thing.settings.AllowedToAccept(refrigeratedItem))
                             {
-                                if (storage.settings.AllowedToAccept(refrigeratedItem))
+                                if (things == null)
                                 {
-                                    if (things == null)
-                                    {
-                                        if (__result?.Count() == 0)
-                                            things = new List<Thing>();
-                                        else
-                                            things = new List<Thing>(__result);
-                                    }
-                                    things.Add(refrigeratedItem);
-                                    break;
+                                    if (__result?.Count() == 0)
+                                        things = new List<Thing>();
+                                    else
+                                        things = new List<Thing>(__result);
                                 }
+
+                                things.Add(refrigeratedItem);
+                                break;
                             }
                         }
                     }
                 }
             }
+
             if (things != null)
                 __result = things;
         }
@@ -199,17 +194,20 @@ namespace RimFridge
                     {
                         thing = t;
                     }
+
                     if (t.def == ThingDefOf.Hopper || fc?.HasFridgeAt(cell) == true)
                     {
                         holder = t;
                     }
                 }
+
                 if (thing != null && holder != null)
                 {
                     __result = thing;
                     return false;
                 }
             }
+
             return false;
         }
     }
@@ -232,6 +230,7 @@ namespace RimFridge
                     {
                         thing = t;
                     }
+
                     if (t.def == ThingDefOf.Hopper || fc?.HasFridgeAt(cell) == true)
                     {
                         holder = t;
@@ -239,16 +238,18 @@ namespace RimFridge
 
                     if (thing != null && holder != null)
                     {
-                        num += (float)thing.stackCount * thing.GetStatValue(StatDefOf.Nutrition, true);
+                        num += (float) thing.stackCount * thing.GetStatValue(StatDefOf.Nutrition, true);
                         if (num >= __instance.def.building.nutritionCostPerDispense)
                         {
                             __result = true;
                             return false;
                         }
+
                         break;
                     }
                 }
             }
+
             return false;
         }
     }

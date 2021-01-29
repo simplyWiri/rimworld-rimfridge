@@ -118,7 +118,7 @@ namespace RimFridge
                         thingWithComps.AllComps.Add(compFrosty);
                         compFrosty.props = CompProperties_Frosty.Beer;
                         compFrosty.parent = thingWithComps;
-                        ((TickList)typeof(TickManager).GetField("tickListRare", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Find.TickManager)).RegisterThing(thingWithComps);
+                        Find.TickManager.tickListRare.RegisterThing(thingWithComps);
                     }
                 }
             }
@@ -205,14 +205,14 @@ namespace RimFridge
         {
             base.PostSpawnSetup(respawningAfterLoad);
 
-            FridgeCache.AddFridge(this, this.parent.mapIndexOrState);
+            FridgeCache.AddFridge(this, parent.mapIndexOrState);
         }
 
         public override void PostDeSpawn(Map map)
         {
             base.PostDeSpawn(map);
 
-            FridgeCache.RemoveFridge(this, map.Index);
+            FridgeCache.RemoveFridge(this, parent.mapIndexOrState);
         }
 
         public override void PostExposeData()
