@@ -1,6 +1,7 @@
 ﻿using System;
 using Verse;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RimFridge
 {
@@ -9,7 +10,7 @@ namespace RimFridge
         private const string COULD_NOT_FIND_MAP_COMP = "unable to find fridge grid in map";
 
         private Dictionary<IntVec3, CompRefrigerator> FridgeGrid = new Dictionary<IntVec3, CompRefrigerator>();
-        private HashSet<RimFridge_Building> fridgeBuildings = new HashSet<RimFridge_Building>(); 
+        private HashSet<ThingWithComps> fridgeBuildings = new HashSet<ThingWithComps>(); 
 
         public static FridgeCache[] fridgeCache = new FridgeCache[8];
 
@@ -31,6 +32,7 @@ namespace RimFridge
             var c = GetFridgeCache(mapIndex);
             if (c != null)
             {
+                c.fridgeBuildings.Add(comp.parent);
                 foreach (IntVec3 cell in GenAdj.OccupiedRect(comp.parent))
                 {
                     c.FridgeGrid[cell] = comp;
@@ -55,6 +57,7 @@ namespace RimFridge
             var c = GetFridgeCache(mapIndex);
             if (c != null)
             {
+                c.fridgeBuildings.Remove(comp.parent);
                 foreach (IntVec3 cell in GenAdj.OccupiedRect(comp.parent))
                 {
                     c.FridgeGrid.Remove(cell);
@@ -64,24 +67,7 @@ namespace RimFridge
 
         public static IEnumerable<RimFridge_Building> GetBuildingsForMap(int mapIndex)
         {
-            return fridgeCache[mapIndex]?.fridgeBuildings;
+            return fridgeCache[mapIndex]?.fridgeBuildings.OfType<RimFridge_Building>();
         }
-
-        public static void RegisterFridgeBuilding(RimFridge_Building building)
-        {
-            var comp = GetFridgeCache(building.mapIndexOrState);
-            if (comp == null) return;
-
-            comp.fridgeBuildings.Add(building);
-        }
-
-        public static void DeRegisterFridgeBuilding(RimFridge_Building building)
-        {
-            var comp = GetFridgeCache(building.mapIndexOrState);
-            if (comp == null) return;
-
-            comp.fridgeBuildings.Remove(building);
-        }
-
     }
 }
